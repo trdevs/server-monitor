@@ -4,7 +4,7 @@ Server monitor for Linux
 ![Go](https://github.com/ermanimer/server-monitor/workflows/Go/badge.svg)
 
 ## Features
-server-monitor is a server monitoring tool for Linux. server-monitor records cpu usage, memory usage and disk usage data between configured intervals. server-monitor has a http server for user interface.
+server-monitor is a server monitoring tool for Linux. server-monitor records cpu usage, memory usage and disk usage data between configured intervals. server-monitor has a http server for user interface. server monitor uses sqlite3 database.
 
 ## Installation
 ```bash
