@@ -1,0 +1,12 @@
+statistics:
+  interval: 1000
+  cpu_usage_interval: 1000
+  disk_usage_path: "/"
+recorder:
+  interval: 15000
+http_server:
+  ip_address: "127.0.0.1"
+  port: 8000
+  read_timeout: 10
+  write_timeout: 10
+  max_header_bytes: 1048576

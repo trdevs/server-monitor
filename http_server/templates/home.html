@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/apexcharts.css">
+    <title>Server Monitor</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+        <a class="navbar-brand" href="/">Server Monitor</a>
+    </nav>
+    <div class="container">
+        <!-- usage cards -->
+        <div class="row">
+            <div class="col-md mt-4 text-center">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">CPU Usage</div>
+                    <div class="card-body">
+                        <h1 id="h_cpu_usage"></h1>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md mt-4 text-center">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">Memory Usage</div>
+                    <div class="card-body text-center">
+                        <h1 id="h_memory_usage"></h1>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md mt-4 text-center">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">Disk Usage</div>
+                    <div class="card-body text-center">
+                        <h1 id="h_disk_usage"></h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- chart -->
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-sm btn-secondary" active>
+                                        <input type="radio" id="b_cpu_usage" checked>Cpu Usage</label>
+                                    <label class="btn btn-sm btn-secondary">
+                                        <input type="radio" id="b_memory_usage">Memory Usage</label>
+                                    <label class="btn btn-sm btn-secondary">
+                                        <input type="radio" id="b_disk_usage">Disk Usage</label>
+                                </div>
+                            </div>
+                            <div class="col text-right">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-sm btn-secondary">
+                                        <input type="radio" id="b_month">1 Month</label>
+                                    <label class="btn btn-sm btn-secondary">
+                                        <input type="radio" id="b_week">1 Week</label>
+                                    <label class="btn btn-sm btn-secondary">
+                                        <input type="radio" id="b_day">1 Day</label>
+                                    <label class="btn btn-sm btn-secondary" active>
+                                        <input type="radio" id="b_hour" checked>1 Hour</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="d_chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- loading modal -->
+    <div class="modal" tabindex="-1" role="dialog" id="m_loading">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/assets/js/jquery-3.4.1.min.js"></script>
+<script src="/assets/js/popper.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
+<script src="/assets/js/apexcharts.min.js"></script>
+<script src="/assets/js/moment.js"></script>
+<script>
+    "use strict"
+    const DF = "YYYY-MM-DD HH:mm:ss"
+    const hCpuUsage = $("#h_cpu_usage")
+    const hMemoryUsage = $("#h_memory_usage")
+    const hDiskUsage = $("#h_disk_usage")
+    const bCpuUsage = $("#b_cpu_usage")
+    const bMemoryUsage = $("#b_memory_usage")
+    const bDiskUsage = $("#b_disk_usage")
+    const bMonth = $("#b_month")
+    const bWeek = $("#b_week")
+    const bDay = $("#b_day")
+    const bHour = $("#b_hour")
+    const mLoading = $("#m_loading")
+    let label
+    let records
+    let chart
+
+    $(document).ready(function () {
+        bCpuUsage.click(function () {
+            label = "Cpu Usage"
+            updateChart()
+        })
+        bMemoryUsage.click(function () {
+            label = "Memory Usage"
+            updateChart()
+        })
+        bDiskUsage.click(function () {
+            label = "Disk Usage"
+            updateChart()
+        })
+        bMonth.click(function () {
+            selectRecords("M")
+        })
+        bWeek.click(function () {
+            selectRecords("w")
+        })
+        bDay.click(function () {
+            selectRecords("d")
+        })
+        bHour.click(function () {
+            selectRecords("h")
+        })
+        getStatistics()
+
+        label = "Cpu Usage"
+        bHour.trigger("click")
+    });
+
+    function getStatistics() {
+        $.ajax({
+            type: "get",
+            url: "/get_statistics",
+            dataType: "json"
+        }).done(response => {
+            hCpuUsage.html(response.cpu_usage.toFixed(1))
+            hMemoryUsage.html(response.memory_usage.toFixed(1))
+            hDiskUsage.html(response.disk_usage.toFixed(1))
+        }).fail(failure => {
+            let response = failure.responseJSON
+            console.log(response.error_message)
+        }).always(() => {
+            setTimeout(function () {
+                getStatistics()
+            }, 1000)
+        })
+    }
+
+    function selectRecords(period) {
+        mLoading.modal({
+            backdrop: "static",
+            keyboard: false
+        })
+        let end = moment().format("X");
+        let start = moment().subtract(1, period).format("X")
+        $.ajax({
+            type: "get",
+            url: `/select_records/${start}/${end}`,
+            dataType: "json"
+        }).done(response => {
+            records = response
+            updateChart()
+        }).fail(failure => {
+            let response = failure.responseJSON
+            console.log(response.error_message)
+        }).always(() => {
+            mLoading.modal("hide")
+        });
+    }
+
+    function updateChart() {
+        let timestamps = []
+        let values = []
+        let count = records.length
+        let step = Math.round(count / 1000)
+        if (step == 0) {
+            step = 1
+        }
+        for (let i = 0; i < count; i += step) {
+            let record = records[i]
+            timestamps.push(moment.unix(record.timestamp).format("YYYY-MM-DD HH:mm:ss"))
+            switch (label) {
+                case "Cpu Usage":
+                    values.push(record.cpu_usage)
+                    break
+                case "Memory Usage":
+                    values.push(record.memory_usage)
+                    break
+                case "Disk Usage":
+                    values.push(record.disk_usage)
+                    break
+            }
+        }
+        var options = {
+            chart: {
+                type: 'line'
+            },
+            series: [{
+                name: label,
+                data: values,
+            }],
+            xaxis: {
+                categories: timestamps,
+            },
+            yaxis: {
+                min: 0,
+                max: 100,
+                decimalsInFloat: 2,
+            },
+            stroke: {
+                width: 2,
+            },
+        }
+        if (chart) {
+            chart.destroy();
+        }
+        chart = new ApexCharts(document.querySelector("#d_chart"), options);
+        chart.render();
+    }
+</script>
+
+</html>
