@@ -9,9 +9,9 @@ import (
 	s "github.com/ermanimer/server-monitor/statistics"
 )
 
-func Start(c *c.Recorder) {
+func Start(co *c.Recorder) {
 	for {
-		time.Sleep(time.Duration(c.Interval) * time.Millisecond)
+		time.Sleep(time.Duration(co.Interval) * time.Millisecond)
 		st := s.GetStatistics()
 		err := db.InsertRecord(st.CpuUsage, st.MemoryUsage, st.DiskUsage)
 		if err != nil {

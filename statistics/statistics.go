@@ -10,10 +10,10 @@ import (
 
 var st Statistics
 
-func UpdateStatistics(c *c.Statistics) {
+func UpdateStatistics(co *c.Statistics) {
 	for {
-		time.Sleep(time.Duration(c.Interval) * time.Millisecond)
-		cpuUsage, err := s.CpuUsage(c.CpuUsageInterval)
+		time.Sleep(time.Duration(co.Interval) * time.Millisecond)
+		cpuUsage, err := s.CpuUsage(co.CpuUsageInterval)
 		if err != nil {
 			l.Debug(err.Error())
 			continue
@@ -25,7 +25,7 @@ func UpdateStatistics(c *c.Statistics) {
 			continue
 		}
 		st.MemoryUsage = memoryUsage
-		diskUsage, err := s.DiskUsage(c.DiskUsagePath)
+		diskUsage, err := s.DiskUsage(co.DiskUsagePath)
 		if err != nil {
 			l.Debug(err.Error())
 			continue
